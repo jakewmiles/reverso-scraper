@@ -5,39 +5,53 @@ import (
 	"fmt"
 
 	"github.com/gocolly/colly/v2"
+	"github.com/gocolly/colly/v2/extensions"
 )
 
 type ContextPair struct {
-	Symbol           string
-	MarketCap        string
-	Price            string
-	Volume24H        string
-	PercentChange1H  string
-	PercentChange24H string
-	PercentChange7D  string
+	SourceSentence string
+	TargetSentence string
 }
 
-func scrape(phrase, srcLang, targLang string) string {
+func scrape(phrase, sourceLanguage, targetLanguage string) string {
 	c := colly.NewCollector()
+	url := fmt.Sprintf("https://context.reverso.net/translation/%v-%v/%v", targetLanguage, sourceLanguage, phrase)
 
-	c.OnHTML("", func(e *colly.HTMLElement) {
+	extensions.RandomUserAgent(c)
 
+	c.OnRequest(func(r *colly.Request) {
+		r.Headers.Set("Accept", "*/*")
+		r.Headers.Set("Connection", "keep-alive")
 	})
 
-	url := fmt.Sprintf("https://context.reverso.net/translation/%v-%v/%v", targLang, srcLang, phrase)
+	sentences := []ContextPair{}
 
-	c.Visit(url)
+	c.OnHTML("#examples-content > .example", func(e *colly.HTMLElement) {
+		source_sentence := e.ChildText(".src > span")
+		target_sentence := e.ChildText(".trg > span")
 
+		sentencePair := ContextPair{
+			SourceSentence: source_sentence,
+			TargetSentence: target_sentence,
+		}
+		sentences = append(sentences, sentencePair)
+	})
+
+	error := c.Visit(url)
+	if error != nil {
+		fmt.Println(error)
+	}
 	fmt.Println("Scraping finished")
 
-	jsonData, err := json.MarshalIndent(url, "", " ")
+	jsonData, err := json.MarshalIndent(sentences, "", " ")
 	if err != nil {
 		panic(err)
 	}
 
+	fmt.Println(string(jsonData))
 	return string(jsonData)
 }
 
 func main() {
-	scrape("hello", "english", "french")
+	scrape("food", "english", "spanish")
 }
