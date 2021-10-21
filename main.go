@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/gocolly/colly/v2/extensions"
@@ -13,9 +15,26 @@ type ContextPair struct {
 	TargetSentence string
 }
 
-func scrape(phrase, sourceLanguage, targetLanguage string) string {
+func contains(s []string, i string) bool {
+	for _, v := range s {
+		if v == i {
+			return true
+		}
+	}
+	return false
+}
+
+func scrape(phrase, sourceLanguage, targetLanguage string) (string, error) {
+	sourceLanguage = strings.ToLower(sourceLanguage)
+	targetLanguage = strings.ToLower(targetLanguage)
+	possibleLanguages := [15]string{"arabic", "german", "english", "spanish", "french", "hebrew", "italian", "japanese", "dutch", "polish", "portuguese", "romanian", "russian", "turkish", "chinese"}
+
+	if !contains(possibleLanguages[:], sourceLanguage) || !contains(possibleLanguages[:], targetLanguage) {
+		return "", errors.New("one or more of your language choices is unavailable")
+	}
+
 	c := colly.NewCollector()
-	url := fmt.Sprintf("https://context.reverso.net/translation/%v-%v/%v", targetLanguage, sourceLanguage, phrase)
+	url := fmt.Sprintf("https://context.reverso.net/translation/%v-%v/%v", sourceLanguage, targetLanguage, phrase)
 
 	extensions.RandomUserAgent(c)
 
@@ -47,11 +66,9 @@ func scrape(phrase, sourceLanguage, targetLanguage string) string {
 	if err != nil {
 		panic(err)
 	}
-
-	fmt.Println(string(jsonData))
-	return string(jsonData)
+	return string(jsonData), nil
 }
 
 func main() {
-	scrape("food", "english", "spanish")
+	scrape("peak", "ENGLISH", "FreNCh")
 }
