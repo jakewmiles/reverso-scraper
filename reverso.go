@@ -1,7 +1,6 @@
 package reverso
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -24,13 +23,13 @@ func contains(s []string, i string) bool {
 	return false
 }
 
-func Scrape(phrase, sourceLanguage, targetLanguage string) (string, error) {
+func Scrape(phrase, sourceLanguage, targetLanguage string) ([]ContextPair, error) {
 	sourceLanguage = strings.ToLower(sourceLanguage)
 	targetLanguage = strings.ToLower(targetLanguage)
 	possibleLanguages := [15]string{"arabic", "german", "english", "spanish", "french", "hebrew", "italian", "japanese", "dutch", "polish", "portuguese", "romanian", "russian", "turkish", "chinese"}
 
 	if !contains(possibleLanguages[:], sourceLanguage) || !contains(possibleLanguages[:], targetLanguage) {
-		return "", errors.New("one or more of your language choices is unavailable")
+		return []ContextPair{}, errors.New("one or more of your language choices is unavailable")
 	}
 
 	c := colly.NewCollector()
@@ -62,9 +61,5 @@ func Scrape(phrase, sourceLanguage, targetLanguage string) (string, error) {
 	}
 	fmt.Println("Scraping finished")
 
-	jsonData, err := json.MarshalIndent(sentences, "", " ")
-	if err != nil {
-		panic(err)
-	}
-	return string(jsonData), nil
+	return sentences, nil
 }
