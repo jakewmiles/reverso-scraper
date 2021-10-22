@@ -1,4 +1,4 @@
-package main
+package reverso
 
 import (
 	"encoding/json"
@@ -24,7 +24,7 @@ func contains(s []string, i string) bool {
 	return false
 }
 
-func scrape(phrase, sourceLanguage, targetLanguage string) (string, error) {
+func Scrape(phrase, sourceLanguage, targetLanguage string) (string, error) {
 	sourceLanguage = strings.ToLower(sourceLanguage)
 	targetLanguage = strings.ToLower(targetLanguage)
 	possibleLanguages := [15]string{"arabic", "german", "english", "spanish", "french", "hebrew", "italian", "japanese", "dutch", "polish", "portuguese", "romanian", "russian", "turkish", "chinese"}
@@ -67,8 +67,4 @@ func scrape(phrase, sourceLanguage, targetLanguage string) (string, error) {
 		panic(err)
 	}
 	return string(jsonData), nil
-}
-
-func main() {
-	scrape("peak", "ENGLISH", "FreNCh")
 }
